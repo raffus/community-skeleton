@@ -32,6 +32,7 @@
     <img class="flag-img" src="https://flagicons.lipis.dev/flags/4x3/pl.svg" alt="Polish" width="24" height="24">
     <img class="flag-img" src="https://flagicons.lipis.dev/flags/4x3/tr.svg" alt="Turkish" width="24" height="24">
     <img class="flag-img" src="https://flagicons.lipis.dev/flags/4x3/cn.svg" alt="Chinese" width="24" height="24">
+    <img class="flag-img" src="https://flagicons.lipis.dev/flags/4x3/br.svg" alt="Brazil" width="24" height="24">
 </p>
 
 [Uvdesk community helpdesk][1] project skeleton packaged along with the bare essential utilities and tools to build and customize your own helpdesk solutions.
@@ -60,9 +61,9 @@ Getting Started
 About
 -----------------
 
-Build on top of [symfony](https://symfony.com/) and [backbone.js](https://backbonejs.org/), uvdesk community is a service oriented, event driven extensible opensource helpdesk system that can be used by your organization to provide efficient support to your clients effortlessly whichever way you imagine.
+Build on top of [symfony](https://symfony.com/) and [backbone.js](https://backbonejs.org/), UVdesk Community is an open-source, service-oriented, and event-driven helpdesk system designed for easy customization and seamless client support. Its extensible architecture allows organizations to deliver efficient, tailored customer service with minimal effort.
 
-The standard distribution comes packaged along with the following helpdesk packages to cover a wide range of use-cases and requirements:
+The standard distribution includes a comprehensive set of helpdesk packages to support a wide range of use cases and operational needs.
 
   * [**Core Framework**][2] - At the heart of the helpdesk system, the core framework consists of all the necessary apis required by your project and dependent packages to keep things running smoothly
 
@@ -82,34 +83,36 @@ Features
 ----------------
 
 * [Translation Support (Multilingual)][32]
-* Unlimited Agents, Group, Team, Customers, Tickets etc
+* Unlimited agents, groups, teams, customers, tickets, and more.
 * Agent Privileges
-* No limit on the number of Mailbox/Email integration
-* Saved Replies for common queries
-* Filter based on ticket status, Id, agent, customer, etc
+* No limit on the number of mailbox/email integrations.
+* Saved Replies – Quickly respond to frequent questions.
+* Filter tickets by status, ID, agent, customer, and more.
 * Block Spam
 * [Agent Activity][29]
 * [Marketing Announcement][30]
+* [Marketing Modules][35]
 * [Kudos][31]
-* reCAPTCHA option
-* Standard automated workflows
-* Notes for agents
-* Custom branding
-* Change logo & favicon
-* Broadcasting message
-* Ticket Forwarding
-* Prepared Response
-* Email Notification
-* Effective search
-* User Friendly Web Installer
-* Add multiple attachments
-* Powerful Knowledgebase/Faq (article, category & folder)
-* Ticket types, Multiple Tags
-* Email Templates
-* [API][16]-[Doc][25]
-* Edit/delete/pinned ticket and thread
-* Add a collaborator and much more.
-* Check Apps [here.][26]
+* [Microsoft Apps][36]
+* reCAPTCHA option.
+* Standard automated workflows.
+* Notes for agents.
+* Custom branding.
+* Change logo & favicon.
+* Broadcasting message.
+* Ticket Forwarding.
+* Prepared Response.
+* Email Notification.
+* Effective search.
+* User Friendly Web Installer.
+* Supports multiple attachments.
+* A powerful knowledge base and FAQ system—organize content by articles, categories, and folders.
+* Ticket types, Multiple Tags.
+* Email Templates.
+* [API Bundle][16] and [Documentation][25]
+* Edit/Delete/Pinned ticket and thread.
+* Easily add collaborators and unlock even more capabilities.
+* [Explore Apps][26]
 
 Documentation
 --------------
@@ -123,7 +126,7 @@ Requirements
 
 * **OS**: Ubuntu 16.04 LTS or higher / Windows 7 or Higher (WAMP / XAMPP).
 * **SERVER**: Apache 2 or NGINX.
-* **RAM**: 4 GB or higher.
+* **RAM**: 4GB or higher.
 * **PHP**: 8.1
 * **Processor**: Clock Cycle 1 Ghz or higher.
 * **For MySQL users**: 5.7.23 or higher.
@@ -140,13 +143,11 @@ The installation process is broken down into two distinct steps:
 
 ### Setting up your helpdesk project
 
-In this step of the installation process, you'll be downloading the helpdesk project skeleton and installing all of its dependent components.
+In this step, you'll download the Helpdesk project skeleton and install its dependencies.
 
-As per your convenience, you can choose to either use composer for download the project and install all its dependencies automatically or directly download the project archive that comes pre-packaged with all of the project dependencies already installed.
+You can either use Composer to download and install everything automatically, or download a pre-packaged archive that includes all dependencies. We recommend using Composer whenever possible for easier updates and better dependency management. However, if you're on a system with limited resources (e.g., shared hosting), the archive download may be more reliable.
 
-We recommend using composer over direct download whenever possible. However, if your system does not have enough ram to execute composer operations properly (for example: installing on a shared host with limited system resources), we suggest using the direct download method instead to mitigate these kind of issues.
-
-Irrespective of the method you use, the process to configuring your helpdesk remains the same.
+Regardless of the method you choose, the configuration process for Helpdesk remains the same.
 
 #### Composer
 
@@ -197,7 +198,6 @@ http(s)://example.com/public
 
 After opening your project in the web browser, you will be greeted by the web installer which will guide you in configuring your project.
 
-
 ##### Run project on localhost (dev mode)
 ```bash
 php bin/console server:run
@@ -208,6 +208,14 @@ php bin/console server:run
 ```bash
 php bin/console c:c
 ```
+
+#### ☁️ Deploy UVdesk on the Cloud with Amazon AMI
+
+Easily launch UVdesk on the cloud using our pre-configured Amazon Machine Image (AMI), available directly from the AWS Marketplace:
+
+👉 [**Launch UVdesk on AWS**](https://aws.amazon.com/marketplace/pp/prodview-c4pibdsnipim4)
+
+This AMI offers a quick and hassle-free way to set up UVdesk on a secure, scalable AWS environment. Perfect for both production deployments and testing purposes, with no need for manual configuration.
 
 **How to log in as admin/agent:**
 
@@ -313,3 +321,6 @@ Support this project by becoming a sponsor. Your logo will show up here with a l
 [32]: https://www.uvdesk.com/en/blog/language-translation-in-uvdesk-open-source-helpdesk/
 [33]: https://github.com/uvdesk/community-skeleton/wiki/Vagrant-Virtual-Machine-Environment
 [34]: https://github.com/uvdesk/community-skeleton/wiki/Docker-Persistent-Container
+[35]: https://www.uvdesk.com/en/blog/marketing-module/
+[36]: https://www.uvdesk.com/en/how-to-integrate-microsoft-app-to-your-opensource-uvdesk/
+

@@ -4,7 +4,6 @@ namespace App\Console\Wizard;
 
 use Doctrine\ORM\Tools\Setup;
 use Doctrine\ORM\EntityManager;
-use Doctrine\DBAL\DBALException;
 use Symfony\Component\Dotenv\Dotenv;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Console\Command\Command;
@@ -58,17 +57,44 @@ class ConfigureHelpdesk extends Command
         $this->consoleOutput = $output;
         $this->questionHelper = $this->getHelper('question');
         $this->projectDirectory = $this->container->getParameter('kernel.project_dir');
+        
+        $env = $this->projectDirectory.'/.env';
+        $var = $this->projectDirectory.'/var';
+        $config = $this->projectDirectory.'/config';
+        $public = $this->projectDirectory.'/public';
+        $migrations = $this->projectDirectory.'/migrations';
+
+        $files = [
+            'env'        => $env,
+            'var'        => $var,
+            'config'     => $config,
+            'public'     => $public,
+            'migrations' => $migrations,
+        ];
+
+        foreach ($files as $file) {
+            if (file_exists($file)) {
+                chmod($file, 0775);
+            }
+        }
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $output->write([self::MCH, self::CLS]);
         $output->writeln("\n<comment>  Examining helpdesk setup for any configuration issues:</comment>\n");
-
         list($db_host, $db_port, $db_name, $db_user, $db_password) = $this->getUpdatedDatabaseCredentials();
+        
 
         // Check 1: Verify database connection
         $output->writeln("  [-] Establishing a connection with database server");
+
+        if (extension_loaded('redis')) {
+            $output->writeln("\n<fg=red;>  [x] Redis extension is loaded");
+            $output->writeln("\n     Please check this <href=https://github.com/uvdesk/community-skeleton/issues/364#issuecomment-780486976>link</> for Redis configuration instructions, in case there is an issue <comment>(connection refused) </comment>while connecting to database.
+     You can add your Redis server host details in the Setup.php file instead of the default port as mentioned in the link.If there are no issues, you can simply 
+     ignore this message.</>\n\n");
+        }
 
         list($isServerAccessible, $isDatabaseAccessible) = $this->refreshDatabaseConnection($db_host, $db_port, $db_name, $db_user, $db_password);
 
@@ -217,8 +243,9 @@ class ConfigureHelpdesk extends Command
 
                         $output->writeln("  <info>[v]</info> Database successfully migrated to the latest migration version <comment>$latestMigrationVersion</comment> to <info>$latestMigrationVersion</info>.\n");
                     } catch (\Exception $e) {
+                        $errorMessage = $e->getMessage();
                         $output->writeln([
-                            "\n  <fg=red;>[x]</> Unable to successfully migrate to latest database schematic version.",
+                            "\n  <fg=red;>[x]</> Unable to successfully migrate to latest database schematic version.($errorMessage)",
                             "\n  Exiting evaluation process.\n"
                         ]);
         
@@ -247,18 +274,20 @@ class ConfigureHelpdesk extends Command
 
         // Check 3: Check if super admin account exists
         $output->writeln("  [-] Checking if an active super admin account exists");
-
+        $userInstance = null;
         $database = new \PDO("mysql:host=$db_host:$db_port;dbname=$db_name", $db_user, $db_password);
 
         $supportRoleQuery = $database->query("SELECT * FROM uv_support_role WHERE code = 'ROLE_SUPER_ADMIN'");
         $supportRole = $supportRoleQuery->fetch(\PDO::FETCH_ASSOC);
 
-        $userInstanceQuery = $database->query("SELECT * FROM uv_user_instance WHERE supportRole_id = " . $supportRole['id']);
+        $userInstanceQuery = $database->prepare("SELECT * FROM uv_user_instance WHERE supportRole_id = :supportRoleId");
+        $userInstanceQuery->execute(['supportRoleId' => (int) $supportRole['id']]);
         $userInstance = $userInstanceQuery->fetch(\PDO::FETCH_ASSOC);
 
         // Get user based on the user instance
         if ($userInstance) {
-            $userQuery = $database->query("SELECT * FROM uv_user WHERE id = " . $userInstance['user_id']);
+            $userQuery = $database->prepare("SELECT * FROM uv_user WHERE id = :userId");
+            $userQuery->execute(['userId' => (int) $userInstance['user_id']]);
             $user = $userQuery->fetch(\PDO::FETCH_ASSOC);
             $this->userInstance = $user;
         }
@@ -317,9 +346,10 @@ class ConfigureHelpdesk extends Command
 
                     $output->writeln("  <info>[v]</info> User account created successfully.\n");
                 } catch (ProcessFailedException $e) {
+                    $errorMessage = $e->getMessage();
                     // Do nothing ...
                     $output->writeln([
-                        "  <fg=red;>[x]</> An unexpected error occurred while creating the user account.\n",
+                        "  <fg=red;>[x]</> An unexpected error occurred while creating the user account($errorMessage).\n",
                         "\n  Exiting evaluation process.\n"
                     ]);
 
@@ -420,15 +450,15 @@ class ConfigureHelpdesk extends Command
     private function refreshDatabaseConnection($host, $port, $name, $user, $password)
     {
         $response = [
-            'isServerAccessible' => true,
+            'isServerAccessible'   => true,
             'isDatabaseAccessible' => true,
         ];
 
         $entityManager = EntityManager::create([
-            'driver' => 'pdo_mysql',
-            "host" => $host,
-            "port" => $port,
-            'user' => $user,
+            'driver'   => 'pdo_mysql',
+            "host"     => $host,
+            "port"     => $port,
+            'user'     => $user,
             'password' => $password,
         ], Setup::createAnnotationMetadataConfiguration(['src/Entity'], false));
         
@@ -438,13 +468,12 @@ class ConfigureHelpdesk extends Command
             try {
                 $databaseConnection->connect();
                 $response['isServerAccessible'] = true;
-
-            } catch (\Doctrine\DBAL\DBALException $e) {
+            } catch (\Exception $e) {
                 return false;
             }
         }
 
-        if (!in_array($name, $databaseConnection->getSchemaManager()->listDatabases())) {
+        if (! in_array($name, $databaseConnection->getSchemaManager()->listDatabases())) {
             $response['isDatabaseAccessible'] = false;
         }
 
@@ -465,10 +494,10 @@ class ConfigureHelpdesk extends Command
     private function createDatabase($host, $port, $name, $user, $password)
     {
         $entityManager = EntityManager::create([
-            'driver' => 'pdo_mysql',
-            "host" => $host,
-            "port" => $port,
-            'user' => $user,
+            'driver'   => 'pdo_mysql',
+            "host"     => $host,
+            "port"     => $port,
+            'user'     => $user,
             'password' => $password,
         ], Setup::createAnnotationMetadataConfiguration(['src/Entity'], false));
         
@@ -482,7 +511,7 @@ class ConfigureHelpdesk extends Command
             }
         }
 
-        if (!in_array($name, $databaseConnection->getSchemaManager()->listDatabases())) {
+        if (! in_array($name, $databaseConnection->getSchemaManager()->listDatabases())) {
             try {
                 // Create database
                 $databaseConnection->getSchemaManager()->createDatabase($databaseConnection->getDatabasePlatform()->quoteSingleIdentifier($name));
@@ -565,7 +594,7 @@ class ConfigureHelpdesk extends Command
             $this->consoleOutput->write(false == $flag ? [self::MCA, self::CLL] : [self::MCA, self::CLL, self::MCA, self::CLL]);
 
             if (empty($input) && false == $nullable && empty($default)) {
-                if (!empty($default)) {
+                if (! empty($default)) {
                     $input = $default;
                 } else if (false == $nullable) {
                     $flag = true;

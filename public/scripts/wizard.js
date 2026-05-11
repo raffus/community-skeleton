@@ -6,19 +6,19 @@
         },
         error500: {
             title: 'Something\'s bad happened with the server.',
-            description: ' Try again by clicking the back button or launch the wizard again by refershing the webpage or clicking the cancel button.'
+            description: ' Try again by clicking the back button or launch the wizard again by refreshing the web page or clicking the cancel button.'
         },
     };
 
     // Wait for all assets to load
     $(window).bind("load", function() {
         var UVDeskCommunityInstallSetupView = Backbone.View.extend({
-            el: '#wizardContent',
+            el: '#installation-wizard-steps-overview-details',
             wizard: undefined,
             wizard_icons_notice_template: _.template($("#wizardIcons-NoticeTemplate").html()),
             installation_setup_template: _.template($("#installationWizard-InstallSetupTemplate").html()),
             installation_process_template: _.template($("#installationWizard-InstallSetupTemplate-ProcessingItem").html()),
-            installation_successfull_template: _.template($('#installationWizard-InstallationCompleteTemplate').html()),
+            installation_successful_template: _.template($('#installationWizard-InstallationCompleteTemplate').html()),
             events: {
                 'click #wizardCTA-CancelInstallation': 'abortInstallation',
                 'click #wizardCTA-StartInstallation': 'installHelpdesk',
@@ -91,7 +91,7 @@
                 })();
             },
             redirectToWelcomePage: function () {
-                this.$el.html(this.installation_successfull_template({prefixCollecton:this.wizard.prefix}));
+                this.$el.find('.installation-wizard-steps-overview-details-container').html(this.installation_successful_template({prefixCollection:this.wizard.prefix}));
             },
             next: function($i) {
                 for (let index = 0; index < $i; index++) {
@@ -112,10 +112,13 @@
                 this.view = attributes.view;
             },
             getDefaultAttributes: function () {
-                // function to fetch current saved prefixes and will update values of defaults
+                // Function to fetch current saved prefixes and will update values of defaults
                 return new Promise ((resolve, reject) => {
                     $.get('./wizard/xhr/website-configure', (response) => {
-                        if (typeof response.status != 'undefined' && true === response.status) {
+                        if (
+                            typeof response.status != 'undefined'
+                            && true === response.status
+                        ) {
                             this.defaults['member_panel_url'] = response.memberPrefix;
                             this.defaults['customer_panel_url'] = response.knowledgebasePrefix;
                             resolve();
@@ -130,7 +133,7 @@
             },
             isProcedureCompleted: function (callback) {
                 this.set('urlCollection', {
-                    'member-prefix': this.view.$el.find('input[name="memeberUrlPrefix"]').val(),
+                    'member-prefix': this.view.$el.find('input[name="memberUrlPrefix"]').val(),
                     'customer-prefix': this.view.$el.find('input[name="customerUrlPrefix"]').val(),
                 });
 
@@ -181,15 +184,21 @@
                 event.preventDefault();
                 this.$el.find('.form-content .wizard-form-notice').remove();
 
-                let memberPrefix = this.$el.find('input[name="memeberUrlPrefix"]').val();
+                let memberPrefix = this.$el.find('input[name="memberUrlPrefix"]').val();
                 let customerPrefix = this.$el.find('input[name="customerUrlPrefix"]').val();
 
-                if (memberPrefix == null || memberPrefix =="") {
+                if (
+                    memberPrefix == null 
+                    || memberPrefix == ""
+                ) {
                     errorFlag = true;
-                    this.$el.find('.form-content input[name="memeberUrlPrefix"]').after("<span class='wizard-form-notice'>This field is mandatory</span>")
+                    this.$el.find('.form-content input[name="memberUrlPrefix"]').after("<span class='wizard-form-notice'>This field is mandatory</span>")
                 }
 
-                if (customerPrefix == null || customerPrefix =="") {
+                if (
+                    customerPrefix == null
+                    || customerPrefix == ""
+                ) {
                     errorFlag = true;
                     this.$el.find('.form-content input[name="customerUrlPrefix"]').after("<span class='wizard-form-notice'>This field is mandatory</span>")
                 }
@@ -199,15 +208,15 @@
                     this.$el.find('.form-content input[name="customerUrlPrefix"]').after("<span class='wizard-form-notice'>Both prefixes can not be same.</span>")
                 }
                 
-                if (!errorFlag) {
+                if (! errorFlag) {
                     let prefixTestRegex = /^[a-z0-9A-Z]*$/;
 
-                    if (!prefixTestRegex.test(memberPrefix)) {
+                    if (! prefixTestRegex.test(memberPrefix)) {
                         errorFlag = true;
-                        this.$el.find('.form-content input[name="memeberUrlPrefix"]').after("<span class='wizard-form-notice'>Only letters and numbers are allowed</span>")
+                        this.$el.find('.form-content input[name="memberUrlPrefix"]').after("<span class='wizard-form-notice'>Only letters and numbers are allowed</span>")
                     }
 
-                    if (!prefixTestRegex.test(customerPrefix)) {
+                    if (! prefixTestRegex.test(customerPrefix)) {
                         errorFlag = true;
                         this.$el.find('.form-content input[name="customerUrlPrefix"]').after("<span class='wizard-form-notice'>Only letters and numbers are allowed</span>")
                     }
@@ -250,7 +259,10 @@
                 wizard.reference_nodes.content.find('#wizardCTA-IterateInstallation').prepend('<span class="processing-request">' + wizard.wizard_icons_loader_template() + '</span>');
                 
                 $.post('./wizard/xhr/intermediary/super-user', this.get('user'), function (response) {
-                    if (typeof response.status != 'undefined' && true === response.status) {
+                    if (
+                        typeof response.status != 'undefined' 
+                        && true === response.status
+                    ) {
                         callback(this.view);
                     } else {
                         wizard.disableNextStep();
@@ -287,7 +299,7 @@
                 let errorFlag = false;
                 let nameRegex = /^[A-Za-z][A-Za-z]*[\sA-Za-z]*$/;
                 let emailRegex = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-                let passwordRegix = /^(?=(.*[a-zA-Z].*){2,})(?=.*\d.*)(?=.*\W.*)[a-zA-Z0-9\S]{8,}$/;
+                let passwordRegix = /^(?=(.*[a-zA-Z].*){2,})(?=.*\d)(?=.*[^\w\s]|.*_)[^\s]{8,}$/;
 
                 let user = {
                     name: this.$el.find('input[name="name"]').val(),
@@ -301,41 +313,66 @@
 
                 enteredField = event.target.name;
                 enteredValue = event.target.value;
-                if (enteredValue == null || enteredValue == "") {
+                if (
+                    enteredValue == null 
+                    || enteredValue == ""
+                ) {
                     errorFlag = true;
                     selectedElement.find('.wizard-form-notice')
                     selectedElement.append("<span class='wizard-form-notice'>This field is mandatory</span>");
                 }
 
-                if (!errorFlag && user.name) {
-                    if (!nameRegex.test(user.name)) {
+                if (
+                    ! errorFlag 
+                    && user.name
+                ) {
+                    if (! nameRegex.test(user.name)) {
                         errorFlag = true;
                         this.$el.find('input[name="name"]').parent().append("<span class='wizard-form-notice'>Invalid Name</span>")
                     }
                 }
 
-                if (!errorFlag && user.email !== "") {
-                    if (!emailRegex.test(user.email)) {
+                if (
+                    ! errorFlag 
+                    && user.email !== ""
+                ) {
+                    if (! emailRegex.test(user.email)) {
                         errorFlag = true;
                         this.$el.find('input[name="email"]').parent().append("<span class='wizard-form-notice'>Invalid Email</span>")
                     }
                 }
 
-                if (user.password.length > 0 && (!passwordRegix.test(user.password))) {
-                        errorFlag = true;
-                        this.$el.find('input[name="password"]').parent().append("<span class='wizard-form-notice'>Password must contain minimum 8 character length, at least two letters (not case sensitive), one number, one special character(space is not allowed).</span>")
+                if (
+                    user.password.length > 0 
+                    && (! passwordRegix.test(user.password))
+                ) {
+                    errorFlag = true;
+                    this.$el.find('input[name="password"]').parent().append("<span class='wizard-form-notice'>Password must contain minimum 8 character length, at least two letters (not case sensitive), one number, one special character(space is not allowed).</span>")
                 }
 
-                if (user.confirmPassword.length > 0 && user.confirmPassword != user.password) {
+                if (
+                    user.confirmPassword.length > 0
+                    && user.confirmPassword != user.password
+                ) {
                     errorFlag = true;
                     this.$el.find('input[name="confirm_password"]').parent().append("<span class='wizard-form-notice'>Password does not match.</span>")
                 }
 
-                if (!errorFlag && (user.name == null || user.name =="") || (user.email == null || user.email =="") || (user.password == null || user.password =="") ||  (user.confirmPassword == null || user.confirmPassword ==""))
+                if (
+                    ! errorFlag 
+                    && (user.name == null
+                    || user.name == "")
+                    || (user.email == null
+                    || user.email =="")
+                    || (user.password == null
+                    || user.password =="")
+                    ||  (user.confirmPassword == null
+                    || user.confirmPassword == "")
+                ) {
                     errorFlag = true;
-
-
-                if (!errorFlag) {
+                }
+                   
+                if (! errorFlag) {
                     this.wizard.enableNextStep();
 
                     if (event.keyCode == 13) {
@@ -345,7 +382,6 @@
                 } else {
                     this.wizard.disableNextStep();
                 }
-
             }, 400),
         });
     
@@ -355,6 +391,7 @@
                 verified: false,
                 credentials: {
                     serverName: '127.0.0.1',
+                    serverVersion: null,
                     serverPort: '3306',
                     username: 'root',
                     password: null,
@@ -368,6 +405,7 @@
             isProcedureCompleted: function (callback) {
                 this.set('credentials', {
                     serverName: this.view.$el.find('input[name="serverName"]').val(),
+                    serverVersion: this.view.$el.find('input[name="serverVersion"]').val(),
                     serverPort: this.view.$el.find('input[name="serverPort"]').val(),
                     username: this.view.$el.find('input[name="username"]').val(),
                     password: this.view.$el.find('input[name="password"]').val(),
@@ -436,6 +474,7 @@
 
                 let credentials = {
                     hostname: this.$el.find('input[name="serverName"]').val(),
+                    serverVersion: this.$el.find('input[name="serverVersion"]').val(),
                     serverPort: this.$el.find('input[name="serverPort"]').val(),
                     username: this.$el.find('input[name="username"]').val(),
                     password: this.$el.find('input[name="password"]').val(),
@@ -477,11 +516,14 @@
                 'php-maximum-execution': {
                     status: undefined,
                 },
-                'php-envfile-permission': {
+                'php-envFile-permission': {
                     status: undefined,
                 },
-                'php-configfiles-permission': {
+                'php-configFiles-permission': {
                     configfiles: [],
+                },
+                'redis-status': {
+                    redis: undefined,
                 }
             },
             initialize: function (attributes) {
@@ -495,6 +537,7 @@
                 this.maximumExecution();
                 this.checkEnvFilePermission();
                 this.checkConfigFilesPermission();
+                this.checkRedisStatus();
             },
             isProcedureCompleted: function (callback) {
                 if (this.get('verified')) {
@@ -553,20 +596,20 @@
                         description: ERRORS.hasOwnProperty('error' + jqXHR.status) ? ERRORS['error' + jqXHR.status].description : 'Maximum Execution Time  </span><p>Need to resolve this issue can be done by reading this blog link:<a href="https: //www.simplified.guide/php/increase-max-execution-time" target="_blank">How to resolve PHP mailparse extension</a></p>',
                     });
                 }).always(() => {
-                    this.view.renderPHPmaximumexecution();
+                    this.view.renderPHPMaximumExecution();
                     this.evaluateOverallRequirements();
                 });
             },
             checkEnvFilePermission: function() {
                 let postData = {
-                    specification: 'php-envfile-permission',
+                    specification: 'php-envFile-permission',
                 };
 
                 $.post('./wizard/xhr/check-requirements', postData, response => {
-                    this.set('php-envfile-permission', response);
+                    this.set('php-envFile-permission', response);
                 }).fail((jqXHR, textStatus, errorThrown) => {
 
-                    this.set('php-envfile-permission', {
+                    this.set('php-envFile-permission', {
                         status: false,
                         message: ERRORS.hasOwnProperty('error' + jqXHR.status) ? ERRORS['error' + jqXHR.status].title : 'An unexpected error occurred during the PHP version verification process',
                         description: ERRORS.hasOwnProperty('error' + jqXHR.status) ? ERRORS['error' + jqXHR.status].description : 'Not details Available',
@@ -578,14 +621,14 @@
             },
             checkConfigFilesPermission: function() {
                 let postData = {
-                    specification: 'php-configfiles-permission',
+                    specification: 'php-configFiles-permission',
                 };
 
                 $.post('./wizard/xhr/check-requirements', postData, response => {
-                    this.set('php-configfiles-permission', response);
+                    this.set('php-configFiles-permission', response);
                 }).fail((jqXHR, textStatus, errorThrown) => {
 
-                    this.set('php-configfiles-permission', {
+                    this.set('php-configFiles-permission', {
                         status: false,
                         message: ERRORS.hasOwnProperty('error' + jqXHR.status) ? ERRORS['error' + jqXHR.status].title : 'An unexpected error occurred during the PHP version verification process',
                         description: ERRORS.hasOwnProperty('error' + jqXHR.status) ? ERRORS['error' + jqXHR.status].description : 'Not details Available',
@@ -595,26 +638,45 @@
                     this.evaluateOverallRequirements();
                 });
             },
+            checkRedisStatus: function() {
+                let postData = {
+                    specification: 'redis-status',
+                };
+                
+                $.post('./wizard/xhr/check-requirements', postData, response => {
+                    this.set('redis-status', response);
+                }).fail((jqXHR, textStatus, errorThrown) => {
+                    
+                    this.set('redis-status', {
+                        status: false,
+                        message: ERRORS.hasOwnProperty('error' + jqXHR.status) ? ERRORS['error' + jqXHR.status].title : 'An unexpected error occurred during the Redis status verification process',
+                        description: ERRORS.hasOwnProperty('error' + jqXHR.status) ? ERRORS['error' + jqXHR.status].description : 'Not details Available',
+                    });
+                }).always(() => {
+                    this.view.renderRedisEnableCode();
+                    this.evaluateOverallRequirements();
+                });
+            },
             evaluateOverallRequirements: function() {
                 if (false == this.get('php-version').status) {
                     this.set('verified', false);
                 }  else if (false == this.get('php-maximum-execution').status) {
                     this.set('verified', false);
-                } else if (false == this.get('php-envfile-permission').status) {
+                } else if (false == this.get('php-envFile-permission').status) {
                     this.set('verified', false);
-                } else if (this.get('php-configfiles-permission').hasOwnProperty('configfiles')) {
-                    let configfiles = this.get('php-configfiles-permission').configfiles;
+                } else if (this.get('php-configFiles-permission').hasOwnProperty('configfiles')) {
+                    let configfiles = this.get('php-configFiles-permission').configfiles;
 
-                    let isconfigfilesError;
+                    let isConfigFilesError;
                     configfiles.forEach(configfiles => {
-                        let currentconfigfileName = Object.keys(configfiles)[0];
-                        if (!configfiles[currentconfigfileName]) {
-                            isconfigfilesError = true;
+                        let currentConfigFileName = Object.keys(configfiles)[0];
+                        if (!configfiles[currentConfigFileName]) {
+                            isConfigFilesError = true;
                             this.set('verified', false);
                         }
                     });
 
-                    if (!isconfigfilesError) {
+                    if (! isConfigFilesError) {
                         this.set('verified', true);
                     }
                 } else if (this.get('php-extensions').hasOwnProperty('extensions')) {
@@ -629,7 +691,7 @@
                         }
                     });
 
-                    if (!isExtensionError) {
+                    if (! isExtensionError) {
                         this.set('verified', true);
                     }
                 } else {
@@ -649,7 +711,7 @@
             model: undefined,
             wizard: undefined,
             events: {
-                "click .PHPExtensions-toggle-details, .PHPVersion-toggle-details, .PHPPermissionEnvfile-toggle-details, .PHPExeTime-toggle-details, .PHPPermissionConfigfiles-toggle-details": function (e) {
+                "click .PHPExtensions-toggle-details, .PHPVersion-toggle-details, .PHPPermissionEnvfile-toggle-details, .PHPExeTime-toggle-details, .PHPPermissionConfigfiles-toggle-details, .PHPEnableRedis-toggle-details": function (e) {
                     // show and hide extension details
                     const currentElement = Backbone.$(e.currentTarget)
                     currentElement.parents('[class*="info-container"]').siblings('.systemCriteria-Details').toggle();
@@ -667,12 +729,15 @@
                 execution: undefined,
                 permission: undefined,
                 Configfiles: undefined,
+                RedisStatus: undefined,
             },
             wizard_icons_loader_template: _.template($("#wizardIcons-LoaderTemplate").html()),
+            wizard_icons_warning_template: _.template($("#wizardIcons-WarningTemplate").html()),
             wizard_icons_success_template: _.template($("#wizardIcons-SuccessTemplate").html()),
             wizard_icons_notice_template: _.template($("#wizardIcons-NoticeTemplate").html()),
             wizard_system_requirements_template: _.template($("#installationWizard-SystemRequirementsTemplate").html()),
             wizard_system_requirements_php_ver_template: _.template($("#installationWizard-SystemRequirementsTemplate-PHPVersion").html()),
+            wizard_system_requirements_php_enable_redis_template: _.template($("#installationWizard-SystemRequirementsTemplate-RedisEnable").html()),
             wizard_system_requirements_php_ext_template: _.template($("#installationWizard-SystemRequirementsTemplate-PHPExtensions").html()),
             wizard_system_requirements_php_exe_template: _.template($("#installationWizard-SystemRequirementsTemplate-PHPExecution").html()),
             wizard_system_requirements_php_env_template: _.template($("#installationWizard-SystemRequirementsTemplate-PHPPermission").html()),
@@ -692,13 +757,15 @@
                 this.reference_nodes.permission = this.$el.find('#systemCriteria-PHPPermission');
                 
                 this.reference_nodes.Configfiles = this.$el.find('#systemCriteria-PHPPermissionConfigfiles');
+                this.reference_nodes.RedisStatus = this.$el.find('#systemCriteria-RedisStatus');
 
                 this.renderPHPVersion('verifying');
                 this.renderPHPExtensionsCriteria('verifying');
 
-                this.renderPHPmaximumexecution('verifying');
+                this.renderPHPMaximumExecution('verifying');
                 this.renderEnvFilePermission('verifying');
                 this.renderConfigFilesPermission('verifying');
+                this.renderRedisEnableCode('verifying');
 
                 this.model.fetch();
             },
@@ -723,6 +790,37 @@
                         this.reference_nodes.version.find('#systemCriteria-PHPVersion-Details').html(this.model.get('php-version').description);
                     }
                 }
+            },
+            renderRedisEnableCode: function(status) {
+                this.reference_nodes.RedisStatus.html(this.wizard_system_requirements_php_enable_redis_template(this.model.get('redis-status')));
+                this.reference_nodes.RedisStatus.find('.PHPEnableRedis-toggle-details').hide();
+                var message = this.model.get('redis-status').message;
+
+                if ('undefined' == typeof this.model.get('redis-status').status) {
+                    return;
+                }
+
+                if(true === this.model.get('redis-status').status && typeof message !== 'string') {
+                    this.reference_nodes.RedisStatus.empty();
+                    $('#systemCriteria-RedisStatus').remove();
+                } else {
+                    if (true == this.model.get('redis-status').status) {
+                        this.reference_nodes.RedisStatus.find('.wizard-svg-icon-redis-criteria-checklist').html(this.wizard_icons_success_template()); 
+                        this.reference_nodes.RedisStatus.find('label').html(this.model.get('redis-status').message);
+                    } else {
+                        this.reference_nodes.RedisStatus.find('.wizard-svg-icon-redis-criteria-checklist').html(this.wizard_icons_warning_template());
+                        this.reference_nodes.RedisStatus.find('label').html(this.model.get('redis-status').message);
+                        
+                        if (this.model.get('redis-status').hasOwnProperty('description')) {
+                            this.reference_nodes.RedisStatus.find('.wizard-svg-icon-redis-criteria-checklist').html(this.wizard_icons_warning_template());
+                            this.reference_nodes.RedisStatus.find('.PHPEnableRedis-toggle-details').show();
+                        }
+                    }
+
+                    this.reference_nodes.RedisStatus.find('.systemCriteria-Details').addClass('systemCriteria-Info-Message');
+                    this.reference_nodes.RedisStatus.find('.systemCriteria-PHPEnableRedis-Details label').html(this.model.get('redis-status').description);
+                }
+                
             },
             renderPHPExtensionsCriteria: function(status) {
                 this.reference_nodes.extension.html(this.wizard_system_requirements_php_ext_template(this.model.get('php-extensions')));
@@ -775,7 +873,7 @@
                     this.reference_nodes.extension.find('#systemCriteria-PHPExtensions-Details').addClass('systemCriteria-Info-Message');
                 }
             },
-            renderPHPmaximumexecution: function(status) {
+            renderPHPMaximumExecution: function(status) {
                 this.reference_nodes.execution.html(this.wizard_system_requirements_php_exe_template(this.model.get('php-maximum-execution')));
                 this.reference_nodes.execution.find('.PHPExeTime-toggle-details').hide();
                 if (false == this.model.get('fetch')) {
@@ -797,72 +895,74 @@
                 }
             },
             renderEnvFilePermission: function(status) {
-                this.reference_nodes.permission.html(this.wizard_system_requirements_php_env_template(this.model.get('php-envfile-permission')));
+                this.reference_nodes.permission.html(this.wizard_system_requirements_php_env_template(this.model.get('php-envFile-permission')));
                 this.reference_nodes.permission.find('.PHPPermissionEnvfile-toggle-details').hide();
 
                 if (false == this.model.get('fetch')) {
                     this.reference_nodes.permission.find('.wizard-svg-icon-permissionEnvfile-criteria-checklist').html(this.wizard_icons_loader_template());
                     this.reference_nodes.permission.find('label').html('Checking currently enabled .env file');
                 } else {
-                    if (true === this.model.get('php-envfile-permission').status) {
+                    if (true === this.model.get('php-envFile-permission').status) {
                         this.reference_nodes.permission.find('.wizard-svg-icon-permissionEnvfile-criteria-checklist').html(this.wizard_icons_success_template());
-                        this.reference_nodes.permission.find('label').html(this.model.get('php-envfile-permission').message);
+                        this.reference_nodes.permission.find('label').html(this.model.get('php-envFile-permission').message);
                     } else {
                         this.reference_nodes.permission.find('.wizard-svg-icon-permissionEnvfile-criteria-checklist').html(this.wizard_icons_notice_template());
-                        this.reference_nodes.permission.find('label').html(this.model.get('php-envfile-permission').message);
-                        if (this.model.get('php-envfile-permission').hasOwnProperty('description')) {
+                        this.reference_nodes.permission.find('label').html(this.model.get('php-envFile-permission').message);
+                        if (this.model.get('php-envFile-permission').hasOwnProperty('description')) {
                             this.reference_nodes.permission.find('.PHPPermissionEnvfile-toggle-details').show();
                         }
                         this.reference_nodes.permission.find('.systemCriteria-Details').addClass('systemCriteria-Info-Message');
-                        this.reference_nodes.permission.find('#systemCriteria-PHPPermission-Details').html(this.model.get('php-envfile-permission').description);
+                        this.reference_nodes.permission.find('#systemCriteria-PHPPermission-Details').html(this.model.get('php-envFile-permission').description);
                     }
                 }
             },
             renderConfigFilesPermission: function(status) {
-                this.reference_nodes.Configfiles.html(this.wizard_system_requirements_php_config_template(this.model.get('php-configfiles-permission')));
+                this.reference_nodes.Configfiles.html(this.wizard_system_requirements_php_config_template(this.model.get('php-configFiles-permission')));
                 this.reference_nodes.Configfiles.find('.PHPPermissionConfigfiles-error-message').hide();
                 if (false == this.model.get('fetch')) {
                     this.reference_nodes.Configfiles.find('.wizard-svg-icon-permissionConfigfiles-criteria-checklist').html(this.wizard_icons_loader_template());
                     this.reference_nodes.Configfiles.find('label').html('Checking currently enabled Config-files');
-                } else if (this.model.get('php-configfiles-permission').hasOwnProperty('configfiles')) {
+                } else if (this.model.get('php-configFiles-permission').hasOwnProperty('configfiles')) {
                     var activeconfigfileCount = 0;
-                    var configfileCount = this.model.get('php-configfiles-permission').configfiles.length;
+                    var configfileCount = this.model.get('php-configFiles-permission').configfiles.length;
                     // count the active extensions and set each extension with it's status in the extension list
-                    this.model.get('php-configfiles-permission').configfiles.forEach(configfile => {
-                        let currentconfigfileName = Object.keys(configfile)[0];
-                        let currentconfigfileTemplateInfo = this.reference_nodes.Configfiles.find('#' + currentconfigfileName + '-info');
-                        if (configfile[currentconfigfileName]) {
+                    this.model.get('php-configFiles-permission').configfiles.forEach(configfile => {
+                        let currentConfigFileName = Object.keys(configfile)[0];
+                        let currentconfigfileTemplateInfo = this.reference_nodes.Configfiles.find('#' + currentConfigFileName + '-info');
+                        if (configfile[currentConfigFileName]) {
                             activeconfigfileCount++;
                             var currentconfigfileIconStatus = this.wizard_icons_success_template();
-                            var currentconfigfileTextStatus = "<span class='configfiles_name'>" + currentconfigfileName + ".yaml </span> read/write file permission is enabled.";
+                            var currentConfigFileTextStatus = "<span class='configfiles_name'>" + currentConfigFileName + ".yaml </span> read/write file permission is enabled.";
                         } else {
                             var currentconfigfileIconStatus = this.wizard_icons_notice_template();
-                            if (currentconfigfileName == 'uvdesk') {
-                                var currentconfigfileTextStatus = "<span class='configfiles_name'> " + currentconfigfileName + ".yaml  read/write file permission is disabled </span>";
+                            if (currentConfigFileName == 'uvdesk') {
+                                var currentConfigFileTextStatus = "<span class='configfiles_name'> " + currentConfigFileName + ".yaml  read/write file permission is disabled </span>";
+                            } else if (currentConfigFileName == 'swiftmailer') {
+                                var currentConfigFileTextStatus = "<span class='configfiles_name'> " + currentConfigFileName + ".yaml  read/write file permission is disabled </span>";
                             } else {
-                                var currentconfigfileTextStatus = "<span class='configfiles_name'>" + currentconfigfileName + ".yaml  read/write file permission is disabled </span>";
+                                var currentConfigFileTextStatus = "<span class='configfiles_name'>" + currentConfigFileName + ".yaml  read/write file permission is disabled </span>";
                             }
                             this.reference_nodes.Configfiles.find('.PHPPermissionConfigfiles-error-message').show();
-                            this.reference_nodes.Configfiles.find('.PHPPermissionConfigfiles-error-message').html(this.model.get('php-configfiles-permission').description)
+                            this.reference_nodes.Configfiles.find('.PHPPermissionConfigfiles-error-message').html(this.model.get('php-configFiles-permission').description)
                         }
 
                         currentconfigfileTemplateInfo.find('.wizard-svg-icon-criteria-checklist').html(currentconfigfileIconStatus);
-                        currentconfigfileTemplateInfo.find('label').html(currentconfigfileTextStatus);
+                        currentconfigfileTemplateInfo.find('label').html(currentConfigFileTextStatus);
                     });
                     // set overall response with the count of active extensions
-                   let configfile_info = this.$el.find('#systemCriteria-PHPPermissionConfigfiles');
+                   let configFile_info = this.$el.find('#systemCriteria-PHPPermissionConfigfiles');
                    if (activeconfigfileCount < configfileCount) {
                        var overallconfigfileStatus = this.wizard_icons_notice_template();
                    } else {
                        var overallconfigfileStatus = this.wizard_icons_success_template();
                    }
 
-                   configfile_info.find('.wizard-svg-icon-permissionConfigfiles-criteria-checklist').html(overallconfigfileStatus);
-                   configfile_info.find('.permissionConfigfiles-criteria-label').html("You meet " + activeconfigfileCount + " out of " + configfileCount + " config files permission.");
+                   configFile_info.find('.wizard-svg-icon-permissionConfigfiles-criteria-checklist').html(overallconfigfileStatus);
+                   configFile_info.find('.permissionConfigfiles-criteria-label').html("You meet " + activeconfigfileCount + " out of " + configfileCount + " config files permission.");
                } else {
                    this.reference_nodes.configfiles.find('.wizard-svg-icon-permissionConfigfiles-criteria-checklist').html(this.wizard_icons_notice_template());
-                   this.reference_nodes.configfiles.find('.permissionConfigfiles-criteria-label').html(this.model.get('php-configfiles-permission').message);
-                   this.reference_nodes.configfiles.find('#systemCriteria-PHPPermissionConfigfiles-Details').html(this.model.get('php-configfiles-permission').description);
+                   this.reference_nodes.configfiles.find('.permissionConfigfiles-criteria-label').html(this.model.get('php-configFiles-permission').message);
+                   this.reference_nodes.configfiles.find('#systemCriteria-PHPPermissionConfigfiles-Details').html(this.model.get('php-configFiles-permission').description);
                    this.reference_nodes.configfiles.find('#systemCriteria-PHPPermissionConfigfiles-Details').addClass('systemCriteria-Info-Message');
                }
            }
@@ -1002,8 +1102,8 @@
             ],
             initialize: function(params) {
                 this.router = params.router;
-                this.reference_nodes.header = this.$el.find('#wizardHeader');
-                this.reference_nodes.content = this.$el.find('#wizardContent');
+                this.reference_nodes.header = this.$el.find('#installation-wizard-steps-overview');
+                this.reference_nodes.content = this.$el.find('.installation-wizard-steps-overview-details-container');
 
                 this.renderWizard();
             },
@@ -1019,7 +1119,7 @@
 
                     this.renderWizard();
                 } else {
-                    if (!this.enabled) {
+                    if (! this.enabled) {
                         this.router.navigate('welcome', { trigger: true });
                     } else {
                         this.timeline.every(function (installationStep, index) {
